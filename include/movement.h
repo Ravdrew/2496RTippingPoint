@@ -8,7 +8,8 @@
 
 void chas_move(int left_power, int right_power);
 void move(int target, bool ask_slew = false, int slew_rate = 0, int power_cap = 127, int active_cap = 0, bool cP = true);
-void goalYoink(bool far);
+void goalYoink(int far = 196);
+void postGoalReset();
 void turn(int target, bool ask_slew = false, int slew_rate = 0);
 void absturn(int abstarget, bool ask_slew = false, int slew_rate = 0, int power_cap = 127);
 
@@ -18,6 +19,10 @@ void backClawOpen();
 void backClawClose();
 void jsClawOpen();
 void jsClawClose();
+void stickDown();
+void stickUp();
+
+extern float start_heading;
 
 void moveTillChain(int speed, int timer = 300);
 void moveTillBack(int speed, int timer = 300);

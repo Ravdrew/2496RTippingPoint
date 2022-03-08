@@ -2,18 +2,20 @@
 #include "PID.h"
 #include "movement.h"
 #include "robot.h"
-#define STRAIGHT_KP 0.55 //0.39 0.5
-#define STRAIGHT_KI 0.2 //0.15
+#define STRAIGHT_KP 0.95//0.39 0.5
+#define STRAIGHT_KI 0.1 //0.15
 #define STRAIGHT_KD 0.0
-#define TURN_KP 1.6 //1.2
-#define TURN_KI 0.23 //0.4
+#define TURN_KP 1.84 //1.2
+#define TURN_KI 0.30 //0.4
 #define TURN_KD 0.0
 #define INTEGRAL_KICK_IN 50
-#define MAX_INTEGRAL 40
+#define MAX_INTEGRAL 60
 
 #define COUNT_CONST 25 //23
 
 //bool autonOn;
+
+float start_heading;
 
 void chas_move(int left_power, int right_power){
 	leftFront.move(left_power);
@@ -48,6 +50,14 @@ void jsClawClose(){
 	jSClamp.set_value(false);
 }
 
+void stickUp(){
+	stick.set_value(false);
+}
+
+void stickDown(){
+	stick.set_value(true);
+}
+
 void move(int target, bool ask_slew, int slew_rate, int power_cap, int active_cap, bool cP){
     PID straight(STRAIGHT_KP, STRAIGHT_KI, STRAIGHT_KD);
 
@@ -66,7 +76,7 @@ void move(int target, bool ask_slew, int slew_rate, int power_cap, int active_ca
         
         voltage = straight.calc(target, encoder_average, INTEGRAL_KICK_IN, MAX_INTEGRAL, slew_rate, ask_slew);
 
-        heading = imu.get_rotation() - imu_offset;
+        heading = 0;//imu.get_rotation() - imu_offset;
 
         //std::abs(voltage) > power_cap ? voltage = power_cap*voltage/std::abs(voltage) : voltage = voltage;
         if(active_cap != 0){
@@ -77,8 +87,8 @@ void move(int target, bool ask_slew, int slew_rate, int power_cap, int active_ca
         else{
             std::abs(voltage) > power_cap ? voltage = power_cap*voltage/std::abs(voltage) : voltage = voltage;
         }
+
         chas_move(voltage - heading, voltage + heading); // (voltage - heading, voltage + heading)
-        printf("error: %f\r\n", voltage);
         if (abs(target - encoder_average) <= 3) count++;
         if (count >= COUNT_CONST) break;
         else if(cP && count >= 5) break;
@@ -89,8 +99,8 @@ void move(int target, bool ask_slew, int slew_rate, int power_cap, int active_ca
     chas_move(0,0);
 }
 
-void goalYoink(bool far){
-    PID yoink(STRAIGHT_KP, STRAIGHT_KI, STRAIGHT_KD);
+void goalYoink(int far){
+    PID yoink(1.2, 0.15, STRAIGHT_KD);
 
     float voltage;
     float encoder_average;
@@ -99,42 +109,64 @@ void goalYoink(bool far){
     float heading;
     float target;
     bool stick_down = false;
-
     reset_encoders();
     imu_offset = imu.get_rotation();
-
-    if(far) target = 2000;
-    else target = 1800;
+    stickDown();
+    
+    target = far;
     while(true){ 
         encoder_average = (leftBack.get_position() + rightBack.get_position())/2;
         
+        /*(if(abs(target - encoder_average) >= 150){
+            voltage = 127;
+        }
+        if(abs(target - encoder_average) >= 100){
+            voltage = 80;
+        }
+        else{
+            voltage = 60;
+        }*/
         voltage = yoink.calc(target, encoder_average, INTEGRAL_KICK_IN, MAX_INTEGRAL, 0, false);
 
         heading = imu.get_rotation() - imu_offset;
 
         chas_move(voltage - heading, voltage + heading); // (voltage - heading, voltage + heading)
-        if (stick_down == false && abs(target - encoder_average) <= 100) stick.set_value(true);
+        if (abs(target - encoder_average) <= 3) stickUp();
         if (abs(target - encoder_average) <= 3) break;
 
         pros::delay(10);
     }
 
+    reset_encoders();
     while(true){ 
         encoder_average = (leftBack.get_position() + rightBack.get_position())/2;
         
-        voltage = yoink.calc(target*-1+1300, encoder_average, INTEGRAL_KICK_IN, MAX_INTEGRAL, 0, false);
+        voltage = yoink.calc(-130, encoder_average, INTEGRAL_KICK_IN, MAX_INTEGRAL, 0, false);
+        if (abs(-130 - encoder_average) <= 90){
+            voltage = -127;
+        }
+        
 
         heading = imu.get_rotation() - imu_offset;
 
-        chas_move(voltage - heading, voltage + heading); // (voltage - heading, voltage + heading)
-        if (abs(target+1300 - encoder_average) <= 3) break;
+        chas_move(voltage + heading, voltage - heading); // (voltage + heading, voltage - heading\)
+        if (abs(-130 - encoder_average) <= 95) stickDown();
+        if (abs(-130 - encoder_average) <= 3) break;
 
         pros::delay(10);
     }
     chas_move(0,0);
 }
 
-void turn(int target, bool ask_slew, int slew_rate){
+void postGoalReset(){
+    stickDown();
+    chas_move(-127, -127);
+    pros::delay(200);
+    chas_move(0,0);
+    stickUp();
+}
+
+void turn(float target, bool ask_slew, int slew_rate){
     PID rotate(TURN_KP, TURN_KI, TURN_KD);
 
     float voltage;
@@ -167,7 +199,7 @@ void absturn(int abstarget, bool ask_slew, int slew_rate, int power_cap){
    int count = 0;
  
    while(true){
-       position = std::fmod(imu.get_rotation(), 360);
+       position = std::fmod(imu.get_rotation() - start_heading, 360);
        voltage = absRotate.calc(abstarget, position, INTEGRAL_KICK_IN, MAX_INTEGRAL, slew_rate, ask_slew);
        std::abs(voltage) > power_cap ? voltage = power_cap*voltage/std::abs(voltage) : voltage = voltage;
        chas_move(voltage, -voltage);
@@ -182,16 +214,17 @@ void absturn(int abstarget, bool ask_slew, int slew_rate, int power_cap){
 }
 
 bool chainGoalDetected(){
-    if(chainSense.get_value() < 2000) return true;
+    if(chainSense.get_value() < 2150) return true;
     return false;
 }
 
 bool backGoalDetected(){
-    if(backSense.get_value() < 2000) return true;
+    if(backSense.get_value() < 2150) return true;
     return false;
 }
 
 void moveTillChain(int speed, int timer){
+    chainClawOpen();
     int count = 0;
     while(chainGoalDetected() == false){
         chas_move(speed, speed);
@@ -205,6 +238,7 @@ void moveTillChain(int speed, int timer){
 }
 
 void moveTillBack(int speed, int timer){
+    backClawOpen();
     int count = 0;
     while(backGoalDetected() == false){
         chas_move(speed, speed);

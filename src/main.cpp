@@ -70,9 +70,9 @@ bool resetNeeded = false;
 
 int timer = 0;
 void competition_initialize() {
-	imu.reset();
 	controller.clear();
 	while (true) {
+
 		if(plus.get_value() && !switchPressed){
 			switchPressed = true;
 			resetNeeded = true;
@@ -112,25 +112,87 @@ void competition_initialize() {
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+bool autonRunning = true;
+int autoChainTarget = -30;
+int autoBackTarget = 0;
 
-void testing(){}
+void autonChainBr(void * param){
+	while(chainLimit.get_value() == 0){
+		chainBar.move(-127);
+	}
+	chainBar.tare_position();
+		
+	PID chainPID(CHAIN_KP, CHAIN_KI, CHAIN_KD);
+	float chain_voltage;
+
+	while(autonRunning){
+		chain_voltage = chainPID.calc(autoChainTarget, chainBar.get_position(), INTEGRAL_KICK_IN, MAX_INTEGRAL, 0, false);
+		chainBar.move(chain_voltage);
+
+		pros::delay(10);
+	}
+
+	chainBar.move(0);
+}
+
+void autonBackBr(void * param){
+	pros::delay(300);
+
+	while(backLimit.get_value() == 0){
+		backLift.move(-127);
+	}
+	backLift.move(0);
+	backLift.tare_position();
+
+	PID backPID(BACK_KP, BACK_KI, BACK_KD);
+	float back_voltage;
+
+	while(autonRunning){
+		back_voltage = backPID.calc(autoBackTarget, backLift.get_position(), INTEGRAL_KICK_IN, MAX_INTEGRAL, 0, false);
+		backLift.move(back_voltage);
+		
+		pros::delay(10);
+	}
+
+	backLift.move(0);
+}
+
+void testing(){
+	//pros::Task chainAutonT(autonChainBr);
+	//pros::Task backAutonT(autonBackBr);
+	goalYoink();
+	//stickDown();
+	//pros::delay(2000);
+	//postGoalReset();
+	pros::Task chainAutonT(autonChainBr);
+	absturn(-34);
+	chainClawOpen();
+	stickUp();
+	moveTillChain(127, 100);
+	move(-370);
+	absturn(-90);
+	pros::Task backAutonT(autonBackBr);
+	backClawOpen();
+	openJS();
+	//pros::delay(300);
+	//moveTillBack(-60, 60)
+
+	//absturn(45);
+	//move(-50);
+}
+
+void rushMidClose(){
+	
+
+}
 
 void noAuton(){}
 
 void progSkills(){}
 
-void chainStuff(void * param){
-	while(chainLimit.get_value() == 0){
-		chainBar.move(-127);
-		chainBar.tare_position();
-	}
-	backLift.move(0);
-	chainBar.move(127);
-	pros::delay(100);
-	chainBar.move(0);
-}
 
 void autonomous() {
+	start_heading = imu.get_rotation();
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	chainBar.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
@@ -189,14 +251,14 @@ bool openChain = true;
 bool openJS = false;
 bool openBack = true;
 bool openStick = false;
-bool autoLiftOn = true;
+bool autoLiftOn = false;
 int chainIndex = 0;
 int backIndex = 0;
 //int chainTargets[] = {0, 550, 930}; //0, 1180 ,1700
 //int backTargets[] = {0, 350, 480}; //0, 700, 950
 
 void autoLifts(){
-	if(controller.get_digital(DIGITAL_L1) && chainBar.get_position() > 40){
+	if(controller.get_digital(DIGITAL_L1)){
 		chainBar.move(-127);
 	}       
 	else if(controller.get_digital(DIGITAL_L2)){
@@ -224,6 +286,7 @@ void autoLifts(){
 }
 
 void opcontrol() {
+	autonRunning = false;
 	chainBar.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	//pros::Task backDriver(backDriverPID);

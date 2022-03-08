@@ -19,7 +19,7 @@ public:
         m_kd = kd;
     }
 
-    float calc (int target, int input, int integralKI, int maxI, int slew, bool slewq){ 
+    float calc (float target, float input, int integralKI, int maxI, int slew, bool slewq){ 
         prev_power = power;
         prev_error = error;
         error = target - input;

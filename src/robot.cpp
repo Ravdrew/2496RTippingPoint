@@ -11,7 +11,7 @@ pros::Motor rightBack(9 , MOTOR_GEARSET_36, false, MOTOR_ENCODER_DEGREES);
 pros::Motor chainBar(5, MOTOR_GEARSET_36, true , MOTOR_ENCODER_DEGREES); //Gerald waz here
 pros::Motor backLift(1, MOTOR_GEARSET_36, false, MOTOR_ENCODER_DEGREES);
 
-pros::Imu imu(11);
+pros::Imu imu(16);
 pros::ADIDigitalOut chainClaw(6);
 pros::ADIDigitalOut backClaw(7);
 pros::ADIDigitalOut jSClamp(2);
@@ -22,6 +22,7 @@ pros::ADIDigitalIn plus(1);
 
 pros::ADIAnalogIn chainSense({{19, 1}});
 pros::ADIAnalogIn backSense(4);
+
 
 void reset_encoders(){
     leftFront.tare_position();
