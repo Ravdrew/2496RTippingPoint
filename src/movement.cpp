@@ -5,7 +5,7 @@
 #define STRAIGHT_KP 0.95//0.39 0.5
 #define STRAIGHT_KI 0.1 //0.15
 #define STRAIGHT_KD 0.0
-#define TURN_KP 1.84 //1.2
+#define TURN_KP 1.85 //1.2
 #define TURN_KI 0.30 //0.4
 #define TURN_KD 0.0
 #define INTEGRAL_KICK_IN 50

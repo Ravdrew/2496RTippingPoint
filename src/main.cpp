@@ -165,15 +165,17 @@ void testing(){
 	//pros::delay(2000);
 	//postGoalReset();
 	pros::Task chainAutonT(autonChainBr);
-	absturn(-34);
+	absturn(-33);
 	chainClawOpen();
 	stickUp();
 	moveTillChain(127, 100);
 	move(-370);
-	absturn(-90);
 	pros::Task backAutonT(autonBackBr);
-	backClawOpen();
-	openJS();
+	autoChainTarget = 60;
+	absturn(-180);
+	moveTillBack(-60, 100);
+	//backClawOpen();
+	jsClawOpen();
 	//pros::delay(300);
 	//moveTillBack(-60, 60)
 
@@ -182,9 +184,26 @@ void testing(){
 }
 
 void rushMidClose(){
-	
+	goalYoink();
+	pros::Task chainAutonT(autonChainBr);
+	autoChainTarget = 100;
+	pros::delay(10);
+	stickUp();
+	//move(-25);
+	absturn(90);
+	move(200);//can try using a time based movement here
+	pros::delay(10);
+	chainClawOpen();
+	move(-200);
+	/*pros::Task backAutonT(autonBackBr);
+	absturn(-180);
+	autoChainTarget = -30;
+	moveTillBack(-100, 100);
+	autoBackTarget = 100;*/
 
 }
+
+void soloAWPRush(){}
 
 void noAuton(){}
 
@@ -197,7 +216,7 @@ void autonomous() {
 	chainBar.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 
-	if(selectedAuto == 1) testing();
+	if(selectedAuto == 1) rushMidClose(); //testing();
 	else if(selectedAuto == 2) progSkills();
 	else if(selectedAuto == 3) noAuton();
 	
