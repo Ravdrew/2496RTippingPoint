@@ -2,7 +2,7 @@
 #include "robot.h"
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
-pros::Motor leftFront(13, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
+pros::Motor leftFront(19, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
 pros::Motor leftMid(17, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES); //kinda not good
 pros::Motor leftBack(18, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
 pros::Motor rightFront(6, MOTOR_GEARSET_36, false, MOTOR_ENCODER_DEGREES);

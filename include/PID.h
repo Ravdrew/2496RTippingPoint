@@ -19,6 +19,12 @@ public:
         m_kd = kd;
     }
 
+    void changeConsts(float kp, float ki, float kd){
+        m_kp = kp;
+        m_ki = ki;
+        m_kd = kd;
+    }
+
     float calc (float target, float input, int integralKI, int maxI, int slew, bool slewq){ 
         prev_power = power;
         prev_error = error;

@@ -3,7 +3,7 @@
 #include "movement.h"
 #include "PID.h"
 
-#define MAX_AUTOS 3
+#define MAX_AUTOS 7
 #define CHAIN_KP 5.5
 #define CHAIN_KI 0.1
 #define CHAIN_KD 0.0
@@ -70,7 +70,7 @@ bool resetNeeded = false;
 
 int timer = 0;
 void competition_initialize() {
-	controller.clear();
+	/*controller.clear();
 	while (true) {
 
 		if(plus.get_value() && !switchPressed){
@@ -92,13 +92,17 @@ void competition_initialize() {
 				resetNeeded = false;
 				controller.clear();
 			}
-			if(selectedAuto == 1) controller.set_text(1, 0, "Testing");
-			else if(selectedAuto == 2) controller.set_text(1, 0, "Prog Skills");
-			else if(selectedAuto == 3) controller.set_text(1, 0, "No Auton");
+			if(selectedAuto == 1) controller.set_text(1, 0, "AWP"); //will be awp
+			else if(selectedAuto == 2) controller.set_text(1, 0, "Plat Down");
+			else if(selectedAuto == 3) controller.set_text(1, 0, "Line Side");
+			else if(selectedAuto == 4) controller.set_text(1, 0, "Elims");
+			else if(selectedAuto == 5) controller.set_text(1, 0, "Rush Mid");
+			else if(selectedAuto == 6) controller.set_text(1, 0, "Prog Skills");
+			else if(selectedAuto == 7) controller.set_text(1, 0, "No Auton");
 		}
 		timer++;
 		pros::delay(2);
-	}
+	}*/
 }
 
 /**
@@ -113,7 +117,7 @@ void competition_initialize() {
  * from where it left off.
  */
 bool autonRunning = true;
-int autoChainTarget = -30;
+int autoChainTarget = -10;
 int autoBackTarget = 0;
 
 void autonChainBr(void * param){
@@ -137,9 +141,11 @@ void autonChainBr(void * param){
 
 void autonBackBr(void * param){
 	pros::delay(300);
-
-	while(backLimit.get_value() == 0){
+	int count = 0;
+	while(backLimit.get_value() == 0 && count < 150){
 		backLift.move(-127);
+		++count;
+		pros::delay(10);
 	}
 	backLift.move(0);
 	backLift.tare_position();
@@ -157,44 +163,58 @@ void autonBackBr(void * param){
 	backLift.move(0);
 }
 
-void testing(){
-	//pros::Task chainAutonT(autonChainBr);
-	//pros::Task backAutonT(autonBackBr);
-	goalYoink();
-	//stickDown();
-	//pros::delay(2000);
-	//postGoalReset();
-	pros::Task chainAutonT(autonChainBr);
-	absturn(-33);
-	chainClawOpen();
-	stickUp();
-	moveTillChain(127, 100);
-	move(-370);
-	pros::Task backAutonT(autonBackBr);
-	autoChainTarget = 60;
-	absturn(-180);
-	moveTillBack(-60, 100);
-	//backClawOpen();
-	jsClawOpen();
-	//pros::delay(300);
-	//moveTillBack(-60, 60)
-
-	//absturn(45);
-	//move(-50);
+void turnTune(){
+	absturn(-90, false);
+	backClawOpen();
+	pros::delay(1000);
+	absturn(0, false);
+	backClawClose();
 }
 
-void rushMidClose(){
+void AWP(){
+	jsClawOpen();
+	pros::delay(200);
+	backClawOpen();
+	move(-60);
+	absturn(-90, false);
+	move(180);
+	absturn(0, false);
+	move(910);
+	absturn(-5, false);
+	chainClawOpen();
+	chas_move(70, 70);
+	pros::delay(200);
+	chas_move(0,0);
+	chainBar.move(-80);
+	pros::delay(1500);
+	chainBar.move(0);
+	chainBar.move(127);
+	pros::delay(200);
+	chainBar.move(0);
+	move(-160);
+	pros::Task chainAutonT(autonChainBr);
+	pros::Task backAutonT(autonBackBr);
+	absturn(-90, false);
+	moveTillChain(127, 70);
+	chas_move(-100,-100);
+	pros::delay(700);
+	chas_move(0,0);
+
+
+}
+
+void rushMid(){
+	backClawOpen();
+	jsClawOpen();
+	chainClawOpen();
+	pros::Task backAutonT(autonBackBr);
 	goalYoink();
 	pros::Task chainAutonT(autonChainBr);
-	autoChainTarget = 100;
-	pros::delay(10);
-	stickUp();
-	//move(-25);
-	absturn(90);
-	move(200);//can try using a time based movement here
-	pros::delay(10);
-	chainClawOpen();
-	move(-200);
+	pros::delay(200);
+	moveTillChain(80, 100);
+	autoChainTarget = 700;
+	pros::delay(1000);
+	absturnTimed(-180, true, 330);
 	/*pros::Task backAutonT(autonBackBr);
 	absturn(-180);
 	autoChainTarget = -30;
@@ -203,11 +223,82 @@ void rushMidClose(){
 
 }
 
-void soloAWPRush(){}
+void platDown(){
+	chainBar.move(-127);
+	jsClawOpen();
+	pros::delay(200);
+	chainBar.move(0);
+	backClawOpen();
+	move(-60);
+	pros::Task backAutonT(autonBackBr);
+	absturn(107, false);
+	moveTillBack(-100, 120);
+	autoBackTarget = 100;
+	move(370);
+	autoBackTarget = 300;
+}
 
-void noAuton(){}
+void lineSide(){
+	backClawOpen();
+	jsClawOpen();
+	chainClawOpen();
+	move(165);
+	absturn(90, false);
+	move(145);
+	absturn(84, false);
+	chainBar.move(-100);
+	pros::delay(1400);
+	chainBar.move(0);
+	pros::delay(400);
+	chainBar.move(127);
+	pros::delay(600);
+	chainBar.move(0);
+	move(-147);
+	pros::Task chainAutonT(autonChainBr);
+	pros::Task backAutonT(autonBackBr);
+	absturn(180, false);
+	moveTillBack(-80, 95);
+	chas_move(127,127);
+	pros::delay(800);
+	chas_move(0,0);
+	absturnTimed(0, true, 400);
+}
+
+void elims(){
+	backClawOpen();
+	jsClawOpen();
+	chainClawOpen();
+	goalYoink();
+	pros::Task chainAutonT(autonChainBr);
+	absturnTimed(-36, false);
+	chainClawOpen();
+	stickUp();
+	moveTillChain(127, 92);
+	move(-369);
+	pros::Task backAutonT(autonBackBr);
+	absturnTimed(-173, true, 350);
+	/*chas_move(-50, 50);
+	pros::delay(200);
+	chas_move(0,0);*/
+	moveTillBack(-80, 120);
+	move(270);
+}
+
+void noAuton(){
+	backClawOpen();
+	jsClawOpen();
+	chainClawOpen();
+	pros::Task chainAutonT(autonChainBr);
+	pros::Task backAutonT(autonBackBr);
+}
 
 void progSkills(){}
+
+void testing(){
+	backClawOpen();
+	jsClawOpen();
+	chainClawOpen();
+}
 
 
 void autonomous() {
@@ -215,10 +306,13 @@ void autonomous() {
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	chainBar.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-
-	if(selectedAuto == 1) rushMidClose(); //testing();
-	else if(selectedAuto == 2) progSkills();
-	else if(selectedAuto == 3) noAuton();
+	if(selectedAuto == 1) AWP(); //testing();
+	else if(selectedAuto == 2) platDown();
+	else if(selectedAuto == 3) lineSide();
+	else if(selectedAuto == 4) elims();
+	else if(selectedAuto == 5) rushMid();
+	else if(selectedAuto == 6) progSkills();
+	else if(selectedAuto == 7) noAuton();
 	
 }
 
@@ -266,10 +360,6 @@ void noAutoLiftsBack(){
 	}
 }
 
-bool openChain = true;
-bool openJS = false;
-bool openBack = true;
-bool openStick = false;
 bool autoLiftOn = false;
 int chainIndex = 0;
 int backIndex = 0;
@@ -304,14 +394,48 @@ void autoLifts(){
 	
 }
 
+void autonSelect(){
+	if(plus.get_value() && !switchPressed){
+		switchPressed = true;
+		resetNeeded = true;
+		selectedAuto += 1;
+	}
+	else if(plus.get_value() == false){
+		switchPressed = false;
+	}
+
+	if(selectedAuto > MAX_AUTOS){
+		resetNeeded = true;
+		selectedAuto = 1;
+	}
+	
+	if (!(timer % 5)) {
+		if(resetNeeded){
+			resetNeeded = false;
+			controller.clear();
+		}
+		if(selectedAuto == 1) controller.set_text(1, 0, "AWP"); //will be awp
+		else if(selectedAuto == 2) controller.set_text(1, 0, "Plat Down");
+		else if(selectedAuto == 3) controller.set_text(1, 0, "Line Side");
+		else if(selectedAuto == 4) controller.set_text(1, 0, "Elims");
+		else if(selectedAuto == 5) controller.set_text(1, 0, "Rush Mid");
+		else if(selectedAuto == 6) controller.set_text(1, 0, "Prog Skills");
+		else if(selectedAuto == 7) controller.set_text(1, 0, "No Auton");
+	}
+	timer++;
+}
+
 void opcontrol() {
 	autonRunning = false;
+	openStick = false;
 	chainBar.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	//pros::Task backDriver(backDriverPID);
 	//pros::Task chainDriver(chainDriverPID);
+	controller.clear();
 	
 	while (true) {
+		autonSelect();
 		if(controller.get_digital_new_press(DIGITAL_LEFT)){
 			autoLiftOn = !autoLiftOn;
 		}
