@@ -8,7 +8,7 @@
 
 void chas_move(int left_power, int right_power);
 void move(int target, bool ask_slew = false, int slew_rate = 0, int power_cap = 127, int active_cap = 0, bool cP = true);
-void goalYoink(int far = 199);
+void goalYoink(int far = 208);
 void postGoalReset();
 void turn(int target, bool ask_slew = false, int slew_rate = 0);
 void absturn(int abstarget, bool goal, bool ask_slew = false, int slew_rate = 0, int power_cap = 127);

@@ -3,7 +3,7 @@
 #include "movement.h"
 #include "robot.h"
 #define STRAIGHT_KP 0.95//0.39 0.5
-#define STRAIGHT_KI 0.13 //0.15
+#define STRAIGHT_KI 0.15 //0.15
 #define STRAIGHT_KD 0.0
 #define TURN_KP 1.8 //1.2
 #define TURN_KI 0.3 //0.4
